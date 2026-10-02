@@ -76,8 +76,7 @@ async def get_wellness_data(
 
 
 # Subjective scales accepted by Intervals.icu (all 1-4, see update_wellness docstring).
-# 0 clears the value (verified against the live API: 0 is stored as null).
-_SUBJECTIVE_SCALE_MIN = 0
+_SUBJECTIVE_SCALE_MIN = 1
 _SUBJECTIVE_SCALE_MAX = 4
 
 
@@ -108,20 +107,18 @@ async def update_wellness(  # pylint: disable=too-many-arguments,too-many-positi
         mood:       1=Great, 2=Good, 3=OK, 4=Grumpy
         motivation: 1=Extreme, 2=High, 3=Avg, 4=Low
         injury:     1=None, 2=Niggle, 3=Poor, 4=Injured
-    Pass 0 to clear a previously set value (null cannot be sent to clear it).
 
     NOTE: comments REPLACES the day's existing comment, it does not append. To append,
     read the existing record first (get_wellness_data) and send the combined text.
-    An empty string clears the comment.
 
     Args:
         date: The day to update in YYYY-MM-DD format
-        soreness: Muscle soreness, 1-4, or 0 to clear (optional)
-        fatigue: Fatigue, 1-4, or 0 to clear (optional)
-        stress: Stress, 1-4, or 0 to clear (optional)
-        mood: Mood, 1-4, or 0 to clear (optional)
-        motivation: Motivation, 1-4, or 0 to clear (optional)
-        injury: Injury level, 1-4, or 0 to clear (optional)
+        soreness: Muscle soreness, 1-4 (optional)
+        fatigue: Fatigue, 1-4 (optional)
+        stress: Stress, 1-4 (optional)
+        mood: Mood, 1-4 (optional)
+        motivation: Motivation, 1-4 (optional)
+        injury: Injury level, 1-4 (optional)
         comments: Free-text comment for the day; replaces any existing comment (optional)
         athlete_id: The Intervals.icu athlete ID (optional, will use ATHLETE_ID from .env if not provided)
         api_key: The Intervals.icu API key (optional, will use API_KEY from .env if not provided)
