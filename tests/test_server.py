@@ -1595,3 +1595,18 @@ def test_update_activity_error(monkeypatch):
     result = asyncio.run(update_activity(activity_id="i999", rpe=5))
     assert "Error updating activity" in result
     assert "Activity not found" in result
+
+
+def test_get_plan_compliance_null_load_shows_na(monkeypatch):
+    """A planned workout whose load is null is shown as 'load n/a', not 'load None'."""
+    monkeypatch.setattr(
+        "intervals_mcp_server.tools.training_review._today", lambda: datetime.date(2026, 10, 2)
+    )
+    events = [
+        {"id": 1, "category": "WORKOUT", "type": "WeightTraining", "name": "Strength",
+         "start_date_local": "2026-10-03T00:00:00", "moving_time": 3300, "icu_training_load": None},
+    ]
+    _patch_training_review(monkeypatch, {"/events": events, "/activities": []})
+    result = asyncio.run(get_plan_compliance("2026-09-28", "2026-10-04", athlete_id="1"))
+    assert "load n/a" in result
+    assert "load None" not in result

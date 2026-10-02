@@ -24,6 +24,12 @@ def _today() -> date:
     return date.today()
 
 
+def _fmt_load(item: dict[str, Any]) -> str:
+    """Training load as text; "n/a" when missing or null."""
+    load = item.get("icu_training_load")
+    return "n/a" if load is None else str(load)
+
+
 def _fmt_duration(seconds: Any) -> str:
     """Format seconds as H:MM:SS (or 'n/a' if missing)."""
     if not isinstance(seconds, (int, float)):
@@ -223,7 +229,7 @@ def _event_label(ev: dict[str, Any]) -> str:
     """Short label for an event."""
     return (
         f"{_day(ev)} {ev.get('type') or 'Unknown'} '{ev.get('name') or 'unnamed'}' "
-        f"(planned {_fmt_duration(ev.get('moving_time'))}, load {ev.get('icu_training_load', 'n/a')})"
+        f"(planned {_fmt_duration(ev.get('moving_time'))}, load {_fmt_load(ev)})"
     )
 
 
@@ -303,7 +309,7 @@ def _build_compliance_report(  # pylint: disable=too-many-locals
     lines += ["", f"Unplanned activities ({len(unplanned)}):"]
     lines += [
         f"- {_day(a)} {a.get('type') or 'Unknown'} '{a.get('name') or 'unnamed'}' "
-        f"(id {a.get('id')}, {_fmt_duration(a.get('moving_time'))}, load {a.get('icu_training_load', 'n/a')})"
+        f"(id {a.get('id')}, {_fmt_duration(a.get('moving_time'))}, load {_fmt_load(a)})"
         for a in unplanned
     ] or ["- none"]
     if outside:
@@ -311,7 +317,7 @@ def _build_compliance_report(  # pylint: disable=too-many-locals
         lines += [
             f"- {_day(a)} {a.get('type') or 'Unknown'} '{a.get('name') or 'unnamed'}' "
             f"(id {a.get('id')}, event {a.get('paired_event_id')}, "
-            f"{_fmt_duration(a.get('moving_time'))}, load {a.get('icu_training_load', 'n/a')})"
+            f"{_fmt_duration(a.get('moving_time'))}, load {_fmt_load(a)})"
             for a in outside
         ]
     availability = _format_availability(notes)
