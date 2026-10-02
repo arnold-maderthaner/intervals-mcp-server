@@ -13,7 +13,6 @@ from intervals_mcp_server.utils.validation import (
     validate_date,
 )
 from intervals_mcp_server.utils.output import OutputFormat, to_json, validate_format, wellness_to_dict
-from intervals_mcp_server.utils.validation import resolve_athlete_id, resolve_date_params
 
 # Import mcp instance from shared module for tool registration
 from intervals_mcp_server.mcp_instance import mcp  # noqa: F401

@@ -814,6 +814,7 @@ def format_sport_settings(settings: dict[str, Any], weight: float | None = None)
         lines.append(f"Athlete weight: {weight:g} kg")
     lines.extend(_format_power_zones(settings))
     lines.extend(_format_hr_zones(settings))
+    return "\n".join(lines)
 
 
 def _curve_header(curve: dict[str, Any]) -> str:
