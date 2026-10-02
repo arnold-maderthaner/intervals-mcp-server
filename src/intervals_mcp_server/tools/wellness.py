@@ -108,8 +108,13 @@ async def update_wellness(  # pylint: disable=too-many-arguments,too-many-positi
         motivation: 1=Extreme, 2=High, 3=Avg, 4=Low
         injury:     1=None, 2=Niggle, 3=Poor, 4=Injured
 
+    A scale value cannot be cleared again through the API once it is set (null is
+    ignored and 0 is rejected); use the Intervals.icu web app for that. Double-check
+    the values before writing.
+
     NOTE: comments REPLACES the day's existing comment, it does not append. To append,
     read the existing record first (get_wellness_data) and send the combined text.
+    An empty string clears the comment.
 
     Args:
         date: The day to update in YYYY-MM-DD format
