@@ -41,6 +41,7 @@ from intervals_mcp_server.tools.training_review import (  # noqa: F401
     get_weekly_summary,
 )
 from intervals_mcp_server.tools.wellness import get_wellness_data  # noqa: F401
+from intervals_mcp_server.tools.wellness import get_wellness_data, update_wellness  # noqa: F401
 
 
 def register_tools(mcp_instance: FastMCP) -> None:
@@ -82,4 +83,5 @@ __all__ = [
     "get_wellness_data",
     "get_weekly_summary",
     "get_plan_compliance",
+    "update_wellness",
 ]

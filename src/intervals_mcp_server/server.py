@@ -33,6 +33,7 @@ Usage:
         - delete_event
         - delete_events_by_date_range
         - get_wellness_data
+        - update_wellness
         - get_athlete_power_curves
         - get_custom_items
         - get_custom_item_by_id
@@ -88,6 +89,7 @@ from intervals_mcp_server.tools.events import (  # pylint: disable=wrong-import-
 from intervals_mcp_server.tools.gear import get_gear_list  # pylint: disable=wrong-import-position  # noqa: E402
 from intervals_mcp_server.tools.sport_settings import get_sport_settings, update_sport_settings  # pylint: disable=wrong-import-position  # noqa: E402
 from intervals_mcp_server.tools.wellness import get_wellness_data  # pylint: disable=wrong-import-position  # noqa: E402
+from intervals_mcp_server.tools.wellness import get_wellness_data, update_wellness  # pylint: disable=wrong-import-position  # noqa: E402
 from intervals_mcp_server.tools.power_curves import get_athlete_power_curves  # pylint: disable=wrong-import-position  # noqa: E402
 from intervals_mcp_server.tools.training_review import (  # pylint: disable=wrong-import-position  # noqa: E402
     get_plan_compliance,
@@ -118,6 +120,7 @@ __all__ = [
     "delete_events_by_date_range",
     "add_or_update_event",
     "get_wellness_data",
+    "update_wellness",
     "get_athlete_power_curves",
     "get_sport_settings",
     "update_sport_settings",
