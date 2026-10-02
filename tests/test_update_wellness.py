@@ -71,13 +71,21 @@ def test_update_wellness_invalid_date(monkeypatch):
 
 
 def test_update_wellness_out_of_range(monkeypatch):
-    """Scale values outside 1-4 are rejected before any request."""
+    """Scale values outside 0-4 are rejected before any request."""
     calls: list = []
     _patch(monkeypatch, {}, calls)
-    for kwargs in ({"mood": 0}, {"stress": 5}, {"injury": -1}):
+    for kwargs in ({"mood": 5}, {"stress": 7}, {"injury": -1}):
         result = asyncio.run(update_wellness(date="2024-01-01", athlete_id="1", **kwargs))
-        assert "must be an integer between 1 and 4" in result
+        assert "must be an integer between 0 and 4" in result
     assert not calls
+
+
+def test_update_wellness_zero_clears_value(monkeypatch):
+    """0 is sent as-is; Intervals.icu stores it as null, clearing the field."""
+    calls: list = []
+    _patch(monkeypatch, {"id": "2024-01-01"}, calls)
+    asyncio.run(update_wellness(date="2024-01-01", injury=0, athlete_id="1"))
+    assert calls[0][1]["data"] == {"injury": 0}
 
 
 def test_update_wellness_empty_comment_is_sent(monkeypatch):
