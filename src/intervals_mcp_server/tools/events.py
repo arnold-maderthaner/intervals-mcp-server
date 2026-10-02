@@ -472,57 +472,74 @@ _BULK_NOTE_KEYS = _BULK_COMMON_KEYS | {"description", "color"}
 def _build_bulk_event_entry(entry: Any) -> dict[str, Any]:  # pylint: disable=too-many-branches
     """Validate one bulk entry and build the API event body using the shared builders.
 
+    All problems of the entry are collected and reported together.
+
     Raises:
-        ValueError: If the entry is invalid.
+        ValueError: If the entry is invalid; the message lists every problem found.
     """
     if not isinstance(entry, dict):
         raise ValueError("entry must be an object")
 
+    problems: list[str] = []
     category = str(entry.get("category") or "WORKOUT").upper()
     if category not in ("WORKOUT", "NOTE"):
         raise ValueError("'category' must be WORKOUT or NOTE")
     allowed = _BULK_NOTE_KEYS if category == "NOTE" else _BULK_WORKOUT_KEYS
     not_applicable = sorted(set(entry) - allowed)
     if not_applicable:
-        raise ValueError(f"keys not supported for category {category}: {', '.join(not_applicable)}")
+        problems.append(f"keys not supported for category {category}: {', '.join(not_applicable)}")
 
     name = entry.get("name")
     if not isinstance(name, str) or not name:
-        raise ValueError("'name' is required")
+        problems.append("'name' is required")
+    validated_date = ""
     if not entry.get("start_date"):
-        raise ValueError("'start_date' is required")
-    validated_date = validate_date(str(entry["start_date"]))
+        problems.append("'start_date' is required")
+    else:
+        try:
+            validated_date = validate_date(str(entry["start_date"]))
+        except ValueError as e:
+            problems.append(str(e))
 
+    description = entry.get("description")
     if category == "NOTE":
-        description = entry.get("description")
         if not isinstance(description, str) or not description:
-            raise ValueError("'description' is required for category NOTE")
-        return _prepare_note_data(name, description, validated_date, entry.get("color", "green"))
+            problems.append("'description' is required for category NOTE")
+        if problems:
+            raise ValueError("; ".join(problems))
+        return _prepare_note_data(
+            str(name), str(description), validated_date, entry.get("color", "green")
+        )
 
     workout_type = entry.get("workout_type")
     if not isinstance(workout_type, str) or not workout_type:
-        raise ValueError("'workout_type' is required for category WORKOUT")
-    description = entry.get("description")
+        problems.append("'workout_type' is required for category WORKOUT")
     if description is not None and not isinstance(description, str):
-        raise ValueError("'description' must be a string")
-    workout_doc = entry.get("workout_doc")
-    if workout_doc is not None and description:
-        raise ValueError("provide either 'workout_doc' or 'description', not both")
-    if isinstance(workout_doc, dict):
+        problems.append("'description' must be a string")
+    raw_doc = entry.get("workout_doc")
+    workout_doc: WorkoutDoc | None = None
+    if raw_doc is not None and description:
+        problems.append("provide either 'workout_doc' or 'description', not both")
+    if isinstance(raw_doc, dict):
         try:
-            workout_doc = WorkoutDoc.from_dict(workout_doc)
+            workout_doc = WorkoutDoc.from_dict(raw_doc)
         except (ValueError, TypeError, KeyError) as e:
-            raise ValueError(f"invalid 'workout_doc': {e!r}") from e
-    elif workout_doc is not None and not isinstance(workout_doc, WorkoutDoc):
-        raise ValueError("'workout_doc' must be an object")
+            problems.append(f"invalid 'workout_doc': {e!r}")
+    elif isinstance(raw_doc, WorkoutDoc):
+        workout_doc = raw_doc
+    elif raw_doc is not None:
+        problems.append("'workout_doc' must be an object")
     for key in ("moving_time", "distance"):
         value = entry.get(key)
         if value is not None and (isinstance(value, bool) or not isinstance(value, int)):
-            raise ValueError(f"'{key}' must be an integer")
+            problems.append(f"'{key}' must be an integer")
+    if problems:
+        raise ValueError("; ".join(problems))
+
     try:
         body = _prepare_event_data(
-            name,
-            workout_type,
+            str(name),
+            str(workout_type),
             validated_date,
             workout_doc,
             entry.get("moving_time"),
@@ -580,7 +597,8 @@ async def add_events_bulk(
 
     Returns:
         JSON with "created" (per event: input index, event id, and the name/start date as returned
-        by the API), "errors" (index and message per invalid entry) and counts. If the request
+        by the API), "errors" (index and all problems found per invalid entry, joined with "; ")
+        and counts. If the request
         fails, an error string is returned and events may have been created.
     """
     athlete_id_to_use, error_msg = resolve_athlete_id(athlete_id, config.athlete_id)

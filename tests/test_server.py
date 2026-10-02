@@ -449,6 +449,24 @@ def test_add_events_bulk_invalid_entries_not_sent(monkeypatch):
     assert [e["index"] for e in result["errors"]] == [0, 2, 3, 4, 5, 6, 7, 8, 9]
 
 
+def test_add_events_bulk_reports_all_problems_of_an_entry(monkeypatch):
+    """Every problem of one entry is reported, not only the first one."""
+    calls = _bulk_capture(monkeypatch, [])
+    result = json.loads(
+        asyncio.run(
+            add_events_bulk(
+                athlete_id="i1",
+                events=[{"name": "Missing date and type", "moving_time": "1h"}],
+            )
+        )
+    )
+    assert calls == []
+    error = result["errors"][0]["error"]
+    assert "'start_date' is required" in error
+    assert "'workout_type' is required for category WORKOUT" in error
+    assert "'moving_time' must be an integer" in error
+
+
 def test_add_events_bulk_workout_description(monkeypatch):
     """A WORKOUT description without workout_doc is sent as the workout text."""
     calls = _bulk_capture(monkeypatch, [{"id": 1, "name": "Server name", "start_date_local": "2025-01-06T00:00:00"}])
