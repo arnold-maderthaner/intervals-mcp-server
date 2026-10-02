@@ -257,6 +257,10 @@ Once the server is running and Claude Desktop is configured, you can use the fol
 - `get_athlete_power_curves`: Get best power output curves for selected durations and time periods
 - `get_sport_settings`: Get sport settings (FTP, LTHR, max HR, power/HR zones) and athlete weight
 - `update_sport_settings`: WRITE - update FTP, LTHR and/or max HR for a sport
+
+
+- `get_hr_curves`: Get best average heart rate curves for selected durations and time periods
+- `get_pace_curves`: Get best time/pace curves (min/km, min/100m for swims; optional GAP) for selected distances and time periods
 - `get_wellness_data`: Fetch wellness data
 - `get_weekly_summary`: Weekly training summary per ISO week and sport (sessions, time, distance, load, HR zones) with end-of-week CTL/ATL/form
 - `get_plan_compliance`: Compare planned workouts with executed activities (completed, missed, upcoming, unplanned, deviations)

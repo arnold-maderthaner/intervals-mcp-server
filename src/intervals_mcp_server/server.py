@@ -37,6 +37,8 @@ Usage:
         - get_wellness_data
         - update_wellness
         - get_athlete_power_curves
+        - get_hr_curves
+        - get_pace_curves
         - get_custom_items
         - get_custom_item_by_id
         - create_custom_item
@@ -104,6 +106,7 @@ from intervals_mcp_server.tools.training_review import (  # pylint: disable=wron
     get_plan_compliance,
     get_weekly_summary,
 )
+from intervals_mcp_server.tools.hr_pace_curves import get_hr_curves, get_pace_curves  # pylint: disable=wrong-import-position  # noqa: E402
 from intervals_mcp_server.tools.custom_items import (  # pylint: disable=wrong-import-position  # noqa: E402
     create_custom_item,
     delete_custom_item,
@@ -140,6 +143,8 @@ __all__ = [
     "get_workout_library",
     "create_library_workout",
     "add_event_from_library",
+    "get_hr_curves",
+    "get_pace_curves",
     "get_custom_items",
     "get_custom_item_by_id",
     "create_custom_item",
