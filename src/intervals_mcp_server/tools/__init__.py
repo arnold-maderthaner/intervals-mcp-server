@@ -49,6 +49,7 @@ from intervals_mcp_server.tools.training_review import (  # noqa: F401
 from intervals_mcp_server.tools.wellness import get_wellness_data, update_wellness  # noqa: F401
 from intervals_mcp_server.tools.workout_library import (  # noqa: F401
     add_event_from_library,
+    delete_library_workout,
     create_library_workout,
     get_workout_library,
 )
@@ -101,4 +102,5 @@ __all__ = [
     "get_workout_library",
     "create_library_workout",
     "add_event_from_library",
+    "delete_library_workout",
 ]

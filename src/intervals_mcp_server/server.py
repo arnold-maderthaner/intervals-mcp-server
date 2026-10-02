@@ -97,6 +97,7 @@ from intervals_mcp_server.tools.sport_settings import get_sport_settings, update
 from intervals_mcp_server.tools.wellness import get_wellness_data, update_wellness  # pylint: disable=wrong-import-position  # noqa: E402
 from intervals_mcp_server.tools.workout_library import (  # pylint: disable=wrong-import-position  # noqa: E402
     add_event_from_library,
+    delete_library_workout,
     create_library_workout,
     get_workout_library,
 )
@@ -144,6 +145,7 @@ __all__ = [
     "add_event_from_library",
     "get_hr_curves",
     "get_pace_curves",
+    "delete_library_workout",
     "get_custom_items",
     "get_custom_item_by_id",
     "create_custom_item",

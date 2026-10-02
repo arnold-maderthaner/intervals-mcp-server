@@ -18,6 +18,7 @@ os.environ.setdefault("ATHLETE_ID", "i1")
 from intervals_mcp_server.server import (  # pylint: disable=wrong-import-position
     add_event_from_library,
     create_library_workout,
+    delete_library_workout,
     get_workout_library,
 )
 
@@ -301,3 +302,44 @@ def test_add_event_from_library_errors(monkeypatch):
     _patch(monkeypatch, responder)
     result = asyncio.run(add_event_from_library(workout_id="1", date="2026-10-05", athlete_id="i1"))
     assert "Error creating event from library workout: x" in result
+
+
+def test_delete_library_workout(monkeypatch):
+    """The workout is looked up first, then deleted with a DELETE on its own URL."""
+
+    def responder(url, method):
+        return [101] if method == "DELETE" else {"id": 101, "name": "Sweet Spot 3x10"}
+
+    calls = _patch(monkeypatch, responder)
+    result = asyncio.run(delete_library_workout(workout_id="101", athlete_id="i1"))
+    assert result == "Deleted library workout 101 'Sweet Spot 3x10'."
+    assert [(c["url"], c["method"]) for c in calls] == [
+        ("/athlete/i1/workouts/101", "GET"),
+        ("/athlete/i1/workouts/101", "DELETE"),
+    ]
+
+
+def test_delete_library_workout_errors(monkeypatch):
+    """Invalid ids, missing workouts and API errors never send a DELETE for the wrong target."""
+    calls = _patch(monkeypatch, lambda url, method: {})
+    for bad in ("", "12a", "../events/1", "1/2"):
+        result = asyncio.run(delete_library_workout(workout_id=bad, athlete_id="i1"))
+        assert result == "Error: workout_id must be a numeric library workout ID."
+    assert not calls
+
+    result = asyncio.run(delete_library_workout(workout_id="7", athlete_id="i1"))
+    assert result == "No library workout found with id 7."
+    assert [c["method"] for c in calls] == ["GET"]
+
+    _patch(monkeypatch, lambda url, method: {"error": True, "message": "nope"})
+    result = asyncio.run(delete_library_workout(workout_id="7", athlete_id="i1"))
+    assert result == "Error fetching library workout: nope"
+
+    def responder(url, method):
+        return (
+            {"error": True, "message": "denied"} if method == "DELETE" else {"id": 7, "name": "W"}
+        )
+
+    _patch(monkeypatch, responder)
+    result = asyncio.run(delete_library_workout(workout_id="7", athlete_id="i1"))
+    assert result == "Error deleting library workout: denied"

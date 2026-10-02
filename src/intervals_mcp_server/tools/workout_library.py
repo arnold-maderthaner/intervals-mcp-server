@@ -260,7 +260,8 @@ async def add_event_from_library(
     workout's name, description (steps), type, duration, distance and tags.
 
     Args:
-        workout_id: The id of the library workout (see get_workout_library)
+        workout_id: The id of the library workout (see get_workout_library). Library ids are
+            numbered per athlete, so small values such as 1 are normal.
         date: Date in YYYY-MM-DD format
         athlete_id: The Intervals.icu athlete ID (optional, will use ATHLETE_ID from .env if not provided)
         api_key: The Intervals.icu API key (optional, will use API_KEY from .env if not provided)
@@ -305,3 +306,40 @@ async def add_event_from_library(
             f"from library workout {workout_id}"
         )
     return f"No event created for athlete {athlete_id_to_use}."
+
+
+@mcp.tool()
+async def delete_library_workout(
+    workout_id: str,
+    athlete_id: str | None = None,
+    api_key: str | None = None,
+) -> str:
+    """DELETES from Intervals.icu: permanently remove a workout from the workout library.
+
+    This cannot be undone. Calendar events that were created from the workout are not
+    affected. Only the given workout is deleted (other workouts added together with it to
+    a plan are kept).
+
+    Args:
+        workout_id: The id of the library workout (see get_workout_library). Library ids are
+            numbered per athlete, so small values such as 1 are normal.
+        athlete_id: The Intervals.icu athlete ID (optional, will use ATHLETE_ID from .env if not provided)
+        api_key: The Intervals.icu API key (optional, will use API_KEY from .env if not provided)
+    """
+    athlete_id_to_use, error_msg = resolve_athlete_id(athlete_id, config.athlete_id)
+    if error_msg:
+        return error_msg
+    if not (workout_id.isascii() and workout_id.isdigit()):
+        return "Error: workout_id must be a numeric library workout ID."
+
+    url = f"/athlete/{athlete_id_to_use}/workouts/{workout_id}"
+    workout = await make_intervals_request(url=url, api_key=api_key)
+    if isinstance(workout, dict) and "error" in workout:
+        return f"Error fetching library workout: {workout.get('message', 'Unknown error')}"
+    if not isinstance(workout, dict) or not workout:
+        return f"No library workout found with id {workout_id}."
+
+    result = await make_intervals_request(url=url, api_key=api_key, method="DELETE")
+    if isinstance(result, dict) and "error" in result:
+        return f"Error deleting library workout: {result.get('message', 'Unknown error')}"
+    return f"Deleted library workout {workout_id} '{workout.get('name') or 'unnamed'}'."
