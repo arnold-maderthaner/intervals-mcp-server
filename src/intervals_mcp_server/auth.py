@@ -125,6 +125,9 @@ def auth_settings_from_env(environ: Mapping[str, str] | None = None) -> dict[str
             Published as the protected resource and required in the token's ``aud`` claim.
         MCP_ALLOWED_USERS: Optional comma-separated ``preferred_username`` allowlist.
         OAUTH_JWKS_URL: Optional JWKS URL; discovered from the issuer when unset.
+        OAUTH_SCOPES: Optional space- or comma-separated scopes. Published as ``scopes_supported``
+            in the protected resource metadata (clients request exactly these instead of every
+            scope the authorization server advertises) and required in every token.
 
     Returns an empty dict when OAuth is not configured.
 
@@ -143,8 +146,11 @@ def auth_settings_from_env(environ: Mapping[str, str] | None = None) -> dict[str
 
     allowed_users = [u.strip() for u in env.get("MCP_ALLOWED_USERS", "").split(",") if u.strip()]
     jwks_uri = env.get("OAUTH_JWKS_URL", "").strip() or None
+    scopes = env.get("OAUTH_SCOPES", "").replace(",", " ").split()
 
     auth_kwargs: dict[str, Any] = {}
+    if scopes:
+        auth_kwargs["required_scopes"] = scopes
     # Newer SDK versions can additionally match AccessToken.resource against the resource URL.
     if "validate_token_resource" in AuthSettings.model_fields:
         auth_kwargs["validate_token_resource"] = True

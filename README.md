@@ -326,9 +326,12 @@ OAUTH_ISSUER=https://auth.example.com/realms/mcp       # issuer URL, exactly as 
 MCP_RESOURCE_URL=https://intervals.example.com/mcp      # public URL of this endpoint
 MCP_ALLOWED_USERS=alice                                 # optional, comma-separated preferred_username allowlist
 # OAUTH_JWKS_URL=...                                    # optional, discovered via OpenID configuration by default
+# OAUTH_SCOPES=openid profile offline_access           # optional, published as scopes_supported and required in tokens
 ```
 
 On the authorization server, create a confidential client with the authorization code flow and PKCE (S256), allow the redirect URI of your MCP client (for claude.ai: `https://claude.ai/api/mcp/auth_callback`), and add an audience mapper so that access tokens carry `MCP_RESOURCE_URL` in `aud`. Enter the client ID and secret in the connector's advanced settings.
+
+Without `OAUTH_SCOPES`, clients such as claude.ai request every scope listed in the authorization server's metadata; Keycloak rejects the request if any of them is not assigned to the client. Setting `OAUTH_SCOPES` limits the request to the listed scopes.
 
 ## Development and testing
 
