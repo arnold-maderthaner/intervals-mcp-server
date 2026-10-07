@@ -144,6 +144,11 @@ def auth_settings_from_env(environ: Mapping[str, str] | None = None) -> dict[str
     allowed_users = [u.strip() for u in env.get("MCP_ALLOWED_USERS", "").split(",") if u.strip()]
     jwks_uri = env.get("OAUTH_JWKS_URL", "").strip() or None
 
+    auth_kwargs: dict[str, Any] = {}
+    # Newer SDK versions can additionally match AccessToken.resource against the resource URL.
+    if "validate_token_resource" in AuthSettings.model_fields:
+        auth_kwargs["validate_token_resource"] = True
+
     return {
         "token_verifier": JWTTokenVerifier(
             issuer, resource, allowed_users=allowed_users, jwks_uri=jwks_uri
@@ -151,5 +156,6 @@ def auth_settings_from_env(environ: Mapping[str, str] | None = None) -> dict[str
         "auth": AuthSettings(
             issuer_url=AnyHttpUrl(issuer),
             resource_server_url=AnyHttpUrl(resource),
+            **auth_kwargs,
         ),
     }

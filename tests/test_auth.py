@@ -118,7 +118,8 @@ def _client():
     settings = auth_settings_from_env({"OAUTH_ISSUER": ISSUER, "MCP_RESOURCE_URL": RESOURCE})
     settings["token_verifier"] = _verifier()
     server = FastMCP("test", **settings)
-    with TestClient(server.streamable_http_app()) as client:
+    # Newer SDKs enable DNS rebinding protection for the default localhost binding.
+    with TestClient(server.streamable_http_app(), base_url="http://127.0.0.1:8000") as client:
         yield client
 
 
