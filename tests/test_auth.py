@@ -74,6 +74,18 @@ def test_oauth_variables_build_settings():
     assert str(settings["auth"].resource_server_url) == RESOURCE
 
 
+def test_scopes_are_parsed():
+    settings = auth_settings_from_env(
+        {"OAUTH_ISSUER": ISSUER, "MCP_RESOURCE_URL": RESOURCE, "OAUTH_SCOPES": "openid, profile offline_access"}
+    )
+    assert settings["auth"].required_scopes == ["openid", "profile", "offline_access"]
+
+
+def test_no_scopes_by_default():
+    settings = auth_settings_from_env({"OAUTH_ISSUER": ISSUER, "MCP_RESOURCE_URL": RESOURCE})
+    assert settings["auth"].required_scopes is None
+
+
 # --- token validation ------------------------------------------------------------------
 
 
@@ -156,6 +168,29 @@ def test_request_with_valid_token_is_served(client):
     headers = {**_HEADERS, "Authorization": f"Bearer {_token()}"}
     response = client.post("/mcp", json=_INITIALIZE, headers=headers)
     assert response.status_code == 200
+
+
+@pytest.fixture(name="scoped_client")
+def _scoped_client():
+    settings = auth_settings_from_env(
+        {"OAUTH_ISSUER": ISSUER, "MCP_RESOURCE_URL": RESOURCE, "OAUTH_SCOPES": "profile offline_access"}
+    )
+    settings["token_verifier"] = _verifier()
+    server = FastMCP("test", **settings)
+    with TestClient(server.streamable_http_app(), base_url="http://127.0.0.1:8000") as client:
+        yield client
+
+
+def test_scopes_are_published_in_metadata(scoped_client):
+    metadata = scoped_client.get("/.well-known/oauth-protected-resource/mcp").json()
+    assert metadata["scopes_supported"] == ["profile", "offline_access"]
+
+
+def test_token_missing_a_required_scope_is_refused(scoped_client):
+    headers = {**_HEADERS, "Authorization": f"Bearer {_token(scope='profile')}"}
+    assert scoped_client.post("/mcp", json=_INITIALIZE, headers=headers).status_code == 403
+    headers = {**_HEADERS, "Authorization": f"Bearer {_token()}"}
+    assert scoped_client.post("/mcp", json=_INITIALIZE, headers=headers).status_code == 200
 
 
 def test_protected_resource_metadata(client):
