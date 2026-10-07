@@ -12,6 +12,7 @@ from typing import Any
 from mcp.server.fastmcp import FastMCP  # pylint: disable=import-error
 
 from intervals_mcp_server.api.client import setup_api_client
+from intervals_mcp_server.auth import auth_settings_from_env
 
 # FastMCP passes explicit defaults (e.g. host="127.0.0.1", port=8000) to its
 # settings model, which take precedence over FASTMCP_* environment variables.
@@ -53,5 +54,8 @@ def fastmcp_settings_from_env(environ: Mapping[str, str] | None = None) -> dict[
 
 
 mcp: FastMCP = FastMCP(  # pylint: disable=invalid-name
-    "intervals-icu", lifespan=setup_api_client, **fastmcp_settings_from_env()
+    "intervals-icu",
+    lifespan=setup_api_client,
+    **fastmcp_settings_from_env(),
+    **auth_settings_from_env(),
 )
